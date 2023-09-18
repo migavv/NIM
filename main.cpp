@@ -1,3 +1,22 @@
+/*
+JUEGO DE NIM
+
+Reglas del Juego:
+Se juega entre 2 jugadores.
+En una partida de NIM se tiene un número arbitrario de pilas que contienen un
+número arbitrario de piezas. Los jugadores se deben turnar para extraer piezas 
+de las pilas. En su respectivo turno, cada jugador podrá escoger únicamente una
+pila y extraer la cantidad de piezas que desee extraer de dicha pila.
+En esta versión de NIM gana el jugador que tome la última pieza.
+
+Programa:
+Este código permite al usuario jugar contra una IA que usa una estrategia
+perfecta.
+El usuario puede escoger el número de pilas y la cantidad de piezas por pila en
+cada partida.
+La IA escogerá los turnos y nuca perderá.
+*/
+
 #include <iostream>
 #include <vector>
 #include <cstdlib>
@@ -5,61 +24,51 @@
 
 using namespace std;
 
-int n;
-bool testing = false;
-vector<int> stacks;
+int n; //Número de pilas
+vector<int> stacks; //Tablero de juego
 
-int getState() {
+//Este método retorna 0 si la IA debe jugar para ganar. Cualquier otro número en caso contrario:
+int getState() { 
     int v = 0;
-    for(int i = 0; i < stacks.size(); i++)
-        v ^= stacks[i];
+    for(int i = 0; i < stacks.size(); i++) //Se hace XOR entre todas las pilas
+        v ^= stacks[i]; 
     return v;
 }
 
-void printMove(int p, int r, int v) {
-    cout << p << ">>Tomo " << v << " pieza(s) de la pila " << r << endl;
+//Método auxiliar que muestra en consola los movimientos realizados:
+void printMove(int r, int v) {
+    cout << "IA>>Tomo " << v << " pieza(s) de la pila " << r                                                                                                                  << endl;
 }
 
-void IA() {
-    if(stacks[stacks.size() - 1] == 1) {
-        printMove(2, stacks.size(), stacks[stacks.size() - 1]);
-        stacks.pop_back();
-    }
-    else if(stacks.size() == 1) {
-        if(!testing) printMove(2, 1, stacks[0] - 1);
-        stacks[0] = 1;
-    }
-    else if(stacks[stacks.size()-2] == 1) {
-        int m = stacks.size()-1;
-        if(stacks.size() % 2 == 0) {
-            printMove(2, m + 1, stacks[m]);
-            stacks.pop_back();
-        }
-        else {
-            printMove(2, m + 1, stacks[m] - 1);
-            stacks[m] = 1;
-        }
-    }
-    else {
-        int s = getState();
-        int i = 0, aux;
-        do {
-            aux = s ^ stacks[i];
-        } while(aux >= stacks[i++]);
-        if(!testing) printMove(2, i + 1, stacks[--i] - aux);
-        if(aux) stacks[i] = aux;
-        else stacks.erase(stacks.begin() + i);
-    }
+/*
+Método que escoge la jugada perfecta para la IA:
+
+El método consiste en encontrar una pila pi de las pilas de la partida y número
+x tales que la operación XOR entre todas las pilas excluyendo pi con x sea igual
+a 0 y x sea menor que el valor en pi.
+Luego el movimiento que hará la IA consistirá en sustituir el valor en pi por x.
+*/
+void IA() { //Complejidad: O(n)
+    int s = getState(); //XOR entre todas las pilas
+    int i = 0, x;
+    do {
+        x = s ^ stacks[i]; //Excluye una pila de la operación XOR, aprovechando que XOR es reversible:
+    } while(x >= stacks[i++]);
+    printMove(i + 1, stacks[--i] - x);
+    if(x) stacks[i] = x;
+    else stacks.erase(stacks.begin() + i);
 }
 
+//Método auxiliar para hacer una jugada aleatoria.
 void aut() {
     int r = rand() % stacks.size();
     int val = rand() % stacks[r] + 1;
-    if(!testing) printMove(3, r + 1, val);
+    printMove(r + 1, val);
     if(stacks[r] == val) stacks.erase(stacks.begin() + r);
     else stacks[r] -= val;
 }
 
+//Método para gestionar las jugadas del usuario
 void player() {
     int r, val;
     cout << "Elige la pila de la cual vas a tomar piezas\n>>";
@@ -70,6 +79,7 @@ void player() {
     else stacks[r - 1] -= val;
 }
 
+//Método auxiliar para probar a la IA con jugadas aleatorias
 void test() {
     int games;
     cout << "pruebas >>"; cin >> games;
@@ -79,7 +89,6 @@ void test() {
             v = rand() % 100 + 1;
         bool turn = getState();
         while(stacks.size()){
-            sort(stacks.begin(), stacks.end());
             cout << "---------\n";
             for(int i = 0; i < stacks.size(); i++)
                 cout << i + 1 << ": " << stacks[i] << endl;
@@ -88,12 +97,12 @@ void test() {
             else IA();
             turn = !turn;
         }
-        if(turn) cout << "Perdiste :(\n";
-        else cout << "Ganaste!\n";
-        system("pause");
+        if(turn) cout << "Ganaste! :(\n";
+        else cout << "Perdiste\n";
     }
 }
 
+//Gestión de la partida:
 void play() {
     cout << "Ingrese el numero de pilas\n>>";
     cin >> n;
@@ -104,9 +113,7 @@ void play() {
         cin >> stacks[i];
     }
     bool turn = getState();
-    system("cls");
     while(stacks.size()){
-        sort(stacks.begin(), stacks.end());
         cout << "---------\n";
         for(int i = 0; i < stacks.size(); i++)
             cout << i + 1 << ": " << stacks[i] << endl;
@@ -115,25 +122,22 @@ void play() {
         else IA();
         turn = !turn;
     }
-    if(turn) cout << "Perdiste :(\n";
-    else cout << "Ganaste!\n";
-    system("pause");
+    if(turn) cout << "Ganaste!\n\n\n";
+    else cout << "Perdiste :(\n\n\n";
 }
 
+//Ejecución del programa:
 int main() {
     srand(time(NULL));
     int input;
     do {
         cout << "BIENVENIDO A NIM\n\nIngresa 1 para jugar, 0 para salir\n>>";
         cin >> input;
-        system("cls");
         if(input == 1) {
             play();
         }
         else if(input == 2) {
-            testing = false;
             test();
         }
-        system("cls");
     } while(input);
 }
